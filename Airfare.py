@@ -1,3 +1,5 @@
+from IPython.display import display, HTML
+import pandas as pd
 import sqlite3
 from sqlite3 import Error
 from csv import reader
@@ -216,5 +218,20 @@ for i in range(len(quarter4_list)):
         execute_sql_statement(sql_statement_append_q4_carrier, conn)
     conn.commit()
 
+#Retrieve all data for visualization for each quarter
 
+sql_statement_q1_data = "SELECT Quarter1.Q1ID, Year, Origin, Destination, Distance, Average_Fare, Carrier_LG, Carrier_Low FROM Quarter1 INNER JOIN Quarter1_Carrier ON Quarter1.Q1ID = Quarter1_Carrier.Q1ID"
+df = pd.read_sql_query(sql_statement_q1_data, conn)
+display(df)
 
+sql_statement_q2_data = "SELECT Quarter2.Q2ID, Year, Origin, Destination, Distance, Average_Fare, Carrier_LG, Carrier_Low FROM Quarter2 INNER JOIN Quarter2_Carrier ON Quarter2.Q2ID = Quarter2_Carrier.Q2ID"
+df = pd.read_sql_query(sql_statement_q2_data, conn)
+display(df)
+
+sql_statement_q1_data = "SELECT Quarter3.Q3ID, Year, Origin, Destination, Distance, Average_Fare, Carrier_LG, Carrier_Low FROM Quarter3 INNER JOIN Quarter3_Carrier ON Quarter3.Q3ID = Quarter3_Carrier.Q3ID"
+df = pd.read_sql_query(sql_statement_q1_data, conn)
+display(df)
+
+sql_statement_q1_data = "SELECT Quarter4.Q4ID, Year, Origin, Destination, Distance, Average_Fare, Carrier_LG, Carrier_Low FROM Quarter4 INNER JOIN Quarter4_Carrier ON Quarter4.Q4ID = Quarter4_Carrier.Q4ID"
+df = pd.read_sql_query(sql_statement_q1_data, conn)
+display(df)
