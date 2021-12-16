@@ -1,3 +1,4 @@
+from os import read
 from IPython.display import display, HTML
 import pandas as pd
 import sqlite3
@@ -34,204 +35,137 @@ normalized_database_name = 'normalized_airfare_prediction.db'
 
 conn = creat_connection(normalized_database_name)
 
-#SQL statement for creating Quarter 1 table
-sql_statement_q1 = """
-CREATE TABLE [Quarter1](
-        [Q1ID] INTEGER PRIMARY KEY AUTOINCREMENT,
-        [Year] INTEGER NOT NULL,
-        [Origin] TEXT NOT NULL,
-        [Destination] TEXT NOT NULL,
-        [Distance] REAL NOT NULL,
-        [Average_Fare] REAL NOT NULL       
-    );
+#SQL statement for creating Year table
+sql_statement_year = """
+CREATE TABLE [Years](
+    [ID] INTEGER PRIMARY KEY AUTOINCREMENT,
+    [Year] INTEGER UNIQUE NOT NULL
+);
 """
-create_table(conn, sql_statement_q1)
+create_table(conn, sql_statement_year)
 
-#SQL statement for creating Quarter 2 table
-sql_statement_q2 = """
-CREATE TABLE [Quarter2](
-        [Q2ID] INTEGER PRIMARY KEY AUTOINCREMENT,
-        [Year] INTEGER NOT NULL,
-        [Origin] TEXT NOT NULL,
-        [Destination] TEXT NOT NULL,
-        [Distance] REAL NOT NULL,
-        [Average_Fare] REAL NOT NULL 
-    );
+#SQL statement for creating Quarter table
+sql_statement_quarter = """
+CREATE TABLE [Quarters](
+    [ID] INTEGER PRIMARY KEY AUTOINCREMENT,
+    [Quarter] INTEGER UNIQUE NOT NULL
+);
 """
-create_table(conn, sql_statement_q2)
+create_table(conn, sql_statement_quarter)
 
-#SQL statement for creating Quarter 3 table
-sql_statement_q3 = """
-CREATE TABLE [Quarter3](
-        [Q3ID] INTEGER PRIMARY KEY AUTOINCREMENT,
-        [Year] INTEGER NOT NULL,
-        [Origin] TEXT NOT NULL,
-        [Destination] TEXT NOT NULL,
-        [Distance] REAL NOT NULL,
-        [Average_Fare] REAL NOT NULL 
-    );
+#SQL statement for creating Carrier_LG table
+sql_statement_carrier = """
+CREATE TABLE [Carriers](
+    [ID] INTEGER PRIMARY KEY AUTOINCREMENT,
+    [Code] TEXT UNIQUE NOT NULL
+);
 """
-create_table(conn, sql_statement_q3)
+create_table(conn, sql_statement_carrier)
 
-#SQL statement for creating Quarter 4 table
-sql_statement_q4 = """
-CREATE TABLE [Quarter4](
-        [Q4ID] INTEGER PRIMARY KEY AUTOINCREMENT,
-        [Year] INTEGER NOT NULL,
-        [Origin] TEXT NOT NULL,
-        [Destination] TEXT NOT NULL,
-        [Distance] REAL NOT NULL,
-        [Average_Fare] REAL NOT NULL 
-    );
+
+sql_statement_destinations = """
+CREATE TABLE [Airports](
+    [ID] INTEGER PRIMARY KEY AUTOINCREMENT,
+    [Name] TEXT UNIQUE NOT NULL
+);
 """
-create_table(conn, sql_statement_q4)
+create_table(conn,sql_statement_destinations)
 
-#Initialize 4 lists for 4 quarters to store data
-quarter1_list = []
-quarter2_list = []
-quarter3_list = []
-quarter4_list = []
+#SQL statement for creating Destinations table
+sql_statement_destinations = """
+CREATE TABLE [Airfares](
+    [ID] INTEGER PRIMARY KEY AUTOINCREMENT,
+    [Origin] INTEGER NOT NULL,
+    [Destination] INTEGER NOT NULL,
+    [Average_Fare] REAL NOT NULL,
+    [Distance] REAL NOT NULL,
+    [Year_ID] INTEGER NOT NULL,
+    [Quarter_ID] INTEGER NOT NULL,
+    [CLg_ID] INTEGER NOT NULL,
+    [CLow_ID] INTEGER NOT NULL,
+    FOREIGN KEY(Origin) REFERENCES Airports(ID),
+    FOREIGN KEY(Destination) REFERENCES Airports(ID),
+    FOREIGN KEY(Year_ID) REFERENCES Years(ID),
+    FOREIGN KEY(Quarter_ID) REFERENCES Quarters(ID),
+    FOREIGN KEY(CLg_ID) REFERENCES Carriers(ID),
+    FOREIGN KEY(CLow_ID) REFERENCES Carriers(ID)
+);
+"""
+create_table(conn, sql_statement_destinations)
 
-
-#Read the csv file to and store the data in the 4 lists created above
+year_list = set()
+quarter_list = set()
+carrier_list = set()
+airport_list = set()
 with open('Airfare_Prediction.csv') as file:
     next(file)
     for i in reader(file):
-        if(i[1] == '1'):
-            i.pop(1)
-            quarter1_list.append(i)
-        elif(i[1] == '2'):
-            i.pop(1)
-            quarter2_list.append(i)
-        elif(i[1] == '3'):
-            i.pop(1)
-            quarter3_list.append(i)
-        elif(i[1] == '4'):
-            i.pop(1)
-            quarter4_list.append(i)
-            
-for i in quarter1_list:
-    year = int(i[0])
-    distance = float(i[3])
-    avg_fare = float(i[4])
-    sql_statement_insert_q1 = "INSERT INTO [Quarter1] (Year, Origin, Destination, Distance, Average_Fare) VALUES({},'{}','{}',{},{})".format(year, i[1], i[2], distance, avg_fare)
-    execute_sql_statement(sql_statement_insert_q1, conn)
+        if(i[0] not in year_list):
+            year_list.add(i[0])
+        if(i[1] not in quarter_list):
+            quarter_list.add(i[1])
+        if(i[2] not in airport_list):
+            airport_list.add(i[2])
+        if(i[3] not in airport_list):
+            airport_list.add(i[3])
+        if(i[6] not in carrier_list):
+            carrier_list.add(i[6])
+        if(i[7] not in carrier_list):
+            carrier_list.add(i[7])
+        
+for i in year_list:
+    sql_statement_insert_year = "INSERT INTO [Years] (Year) VALUES({})".format(i)
+    execute_sql_statement(sql_statement_insert_year, conn)
+conn.commit()
+       
+for i in quarter_list:
+    sql_statement_insert_quarter = "INSERT INTO [Quarters] (Quarter) VALUES({})".format(i)
+    execute_sql_statement(sql_statement_insert_quarter, conn)
+conn.commit()
+       
+for i in carrier_list:
+    sql_statement_insert_carrier = "INSERT INTO [Carriers] (Code) VALUES('{}')".format(i)
+    execute_sql_statement(sql_statement_insert_carrier, conn)
+conn.commit()
+       
+for i in airport_list:
+    sql_statement_destinations = "INSERT INTO [Airports] (Name) VALUES('{}')".format(i)
+    execute_sql_statement(sql_statement_destinations,conn)
 conn.commit()
 
-for i in quarter2_list:
-    year = int(i[0])
-    distance = float(i[3])
-    avg_fare = float(i[4])
-    sql_statement_insert_q2 = "INSERT INTO [Quarter2] (Year, Origin, Destination, Distance, Average_Fare) VALUES({},'{}','{}',{},{})".format(year, i[1], i[2], distance, avg_fare)
-    execute_sql_statement(sql_statement_insert_q2, conn)
-conn.commit()
-
-for i in quarter3_list:
-    year = int(i[0])
-    distance = float(i[3])
-    avg_fare = float(i[4])
-    sql_statement_insert_q3 = "INSERT INTO [Quarter3] (Year, Origin, Destination, Distance, Average_Fare) VALUES({},'{}','{}',{},{})".format(year, i[1], i[2], distance, avg_fare)
-    execute_sql_statement(sql_statement_insert_q3, conn)
-conn.commit()
-
-for i in quarter4_list:
-    year = int(i[0])
-    distance = float(i[3])
-    avg_fare = float(i[4])
-    sql_statement_insert_q4 = "INSERT INTO [Quarter4] (Year, Origin, Destination, Distance, Average_Fare) VALUES({},'{}','{}',{},{})".format(year, i[1], i[2], distance, avg_fare)
-    execute_sql_statement(sql_statement_insert_q4, conn)
-conn.commit()
-
-sql_statement_q1_carrier = """
-CREATE TABLE [Quarter1_Carrier](
-        [Carrier_Q1ID] INTEGER PRIMARY KEY AUTOINCREMENT,
-        [Q1ID] INTEGER NOT NULL,
-        [Carrier_LG] TEXT NOT NULL,
-        [Carrier_Low] TEXT NOT NULL,
-        FOREIGN KEY(Q1ID) REFERENCES Quarter1(Q1ID)
-    );
-"""
-create_table(conn, sql_statement_q1_carrier)
-
-sql_statement_q2_carrier = """
-CREATE TABLE [Quarter2_Carrier](
-        [Carrier_Q2ID] INTEGER PRIMARY KEY AUTOINCREMENT,
-        [Q2ID] INTEGER NOT NULL,
-        [Carrier_LG] TEXT NOT NULL,
-        [Carrier_Low] TEXT NOT NULL,
-        FOREIGN KEY(Q2ID) REFERENCES Quarter2(Q2ID)
-    );
-"""
-create_table(conn, sql_statement_q2_carrier)
-
-sql_statement_q3_carrier = """
-CREATE TABLE [Quarter3_Carrier](
-        [Carrier_Q3ID] INTEGER PRIMARY KEY AUTOINCREMENT,
-        [Q3ID] INTEGER NOT NULL,
-        [Carrier_LG] TEXT NOT NULL,
-        [Carrier_Low] TEXT NOT NULL,
-        FOREIGN KEY(Q3ID) REFERENCES Quarter3(Q3ID)
-    );
-"""
-create_table(conn, sql_statement_q3_carrier)
-
-sql_statement_q4_carrier = """
-CREATE TABLE [Quarter4_Carrier](
-        [Carrier_Q4ID] INTEGER PRIMARY KEY AUTOINCREMENT,
-        [Q4ID] INTEGER NOT NULL,
-        [Carrier_LG] TEXT NOT NULL,
-        [Carrier_Low] TEXT NOT NULL,
-        FOREIGN KEY(Q4ID) REFERENCES Quarter4(Q4ID)
-    );
-"""
-create_table(conn, sql_statement_q4_carrier)
-
-sql_statement_q1_results = "SELECT Q1ID, Average_Fare FROM Quarter1"
-q1_results = execute_sql_statement(sql_statement_q1_results, conn)
-for i in range(len(quarter1_list)):
-    if(float(quarter1_list[i][4]) == q1_results[i][1]):
-        sql_statement_append_q1_carrier = "INSERT INTO [Quarter1_Carrier] (Q1ID, Carrier_LG, Carrier_Low) VALUES ({},'{}','{}')".format(q1_results[i][0],quarter1_list[i][5],quarter1_list[i][6])
-        execute_sql_statement(sql_statement_append_q1_carrier, conn)
+with open('Airfare_Prediction.csv') as file:
+    next(file)
+    for i in reader(file):
+        year_id = execute_sql_statement("SELECT ID FROM Years WHERE Year={}".format(i[0]),conn)[0][0]
+        quarter_id = execute_sql_statement("SELECT ID FROM Quarters WHERE Quarter={}".format(i[1]),conn)[0][0]
+        origin = execute_sql_statement("SELECT ID FROM Airports WHERE Name='{}'".format(i[2]),conn)[0][0]
+        destination = execute_sql_statement("SELECT ID FROM Airports WHERE Name='{}'".format(i[3]),conn)[0][0]
+        carrier_lg = execute_sql_statement("SELECT ID FROM Carriers WHERE Code='{}'".format(i[6]),conn)[0][0]
+        carrier_low = execute_sql_statement("SELECT ID FROM Carriers WHERE Code='{}'".format(i[7]),conn)[0][0]
+        sql_statement_insert_airfares = """
+            INSERT INTO [Airfares] 
+            (Origin, Destination, Average_Fare, Distance, Year_ID, Quarter_ID, CLg_ID, CLow_ID) 
+            VALUES ({},{},{},{},{},{},{},{})""".format(origin, destination,i[5],i[4],year_id,quarter_id,carrier_lg,carrier_low)
+        execute_sql_statement(sql_statement_insert_airfares, conn)
     conn.commit()
 
-sql_statement_q2_results = "SELECT Q2ID, Average_Fare FROM Quarter2"
-q2_results = execute_sql_statement(sql_statement_q2_results, conn)
-for i in range(len(quarter2_list)):
-    if(float(quarter2_list[i][4]) == q2_results[i][1]):
-        sql_statement_append_q2_carrier = "INSERT INTO [Quarter2_Carrier] (Q2ID, Carrier_LG, Carrier_Low) VALUES ({},'{}','{}')".format(q2_results[i][0],quarter2_list[i][5],quarter2_list[i][6])
-        execute_sql_statement(sql_statement_append_q2_carrier, conn)
-    conn.commit()
+sql_statement_table = """
+    SELECT Years.Year,
+        Quarters.Quarter,
+        Origin.Name AS Origin,
+        Destination.Name AS Destination,
+        Airfares.Average_Fare, 
+        Airfares.Distance,
+        Carrier_LG.Code AS Carrier_LG,
+        Carrier_Low.Code AS Carrier_Low
+    FROM Airfares
+    INNER JOIN Years ON Years.ID = Airfares.Year_ID
+    INNER JOIN Quarters ON Quarters.ID = Airfares.Quarter_ID
+    INNER JOIN Airports AS Origin ON Origin.ID = Airfares.Origin
+    INNER JOIN Airports AS Destination ON Destination.ID = Airfares.Destination
+    INNER JOIN Carriers AS Carrier_LG ON Carrier_LG.ID = Airfares.CLg_ID
+    INNER JOIN Carriers AS Carrier_Low ON Carrier_Low.ID = Airfares.CLow_ID
+"""
 
-sql_statement_q3_results = "SELECT Q3ID, Average_Fare FROM Quarter3"
-q3_results = execute_sql_statement(sql_statement_q3_results, conn)
-for i in range(len(quarter3_list)):
-    if(float(quarter3_list[i][4]) == q3_results[i][1]):
-        sql_statement_append_q3_carrier = "INSERT INTO [Quarter3_Carrier] (Q3ID, Carrier_LG, Carrier_Low) VALUES ({},'{}','{}')".format(q3_results[i][0],quarter3_list[i][5],quarter3_list[i][6])
-        execute_sql_statement(sql_statement_append_q3_carrier, conn)
-    conn.commit()
-
-sql_statement_q4_results = "SELECT Q4ID, Average_Fare FROM Quarter4"
-q4_results = execute_sql_statement(sql_statement_q4_results, conn)
-for i in range(len(quarter4_list)):
-    if(float(quarter4_list[i][4]) == q4_results[i][1]):
-        sql_statement_append_q4_carrier = "INSERT INTO [Quarter4_Carrier] (Q4ID, Carrier_LG, Carrier_Low) VALUES ({},'{}','{}')".format(q4_results[i][0],quarter4_list[i][5],quarter4_list[i][6])
-        execute_sql_statement(sql_statement_append_q4_carrier, conn)
-    conn.commit()
-
-#Retrieve all data for visualization for each quarter
-
-sql_statement_q1_data = "SELECT Quarter1.Q1ID, Year, Origin, Destination, Distance, Average_Fare, Carrier_LG, Carrier_Low FROM Quarter1 INNER JOIN Quarter1_Carrier ON Quarter1.Q1ID = Quarter1_Carrier.Q1ID"
-df = pd.read_sql_query(sql_statement_q1_data, conn)
-display(df)
-
-sql_statement_q2_data = "SELECT Quarter2.Q2ID, Year, Origin, Destination, Distance, Average_Fare, Carrier_LG, Carrier_Low FROM Quarter2 INNER JOIN Quarter2_Carrier ON Quarter2.Q2ID = Quarter2_Carrier.Q2ID"
-df = pd.read_sql_query(sql_statement_q2_data, conn)
-display(df)
-
-sql_statement_q1_data = "SELECT Quarter3.Q3ID, Year, Origin, Destination, Distance, Average_Fare, Carrier_LG, Carrier_Low FROM Quarter3 INNER JOIN Quarter3_Carrier ON Quarter3.Q3ID = Quarter3_Carrier.Q3ID"
-df = pd.read_sql_query(sql_statement_q1_data, conn)
-display(df)
-
-sql_statement_q1_data = "SELECT Quarter4.Q4ID, Year, Origin, Destination, Distance, Average_Fare, Carrier_LG, Carrier_Low FROM Quarter4 INNER JOIN Quarter4_Carrier ON Quarter4.Q4ID = Quarter4_Carrier.Q4ID"
-df = pd.read_sql_query(sql_statement_q1_data, conn)
-display(df)
+df = pd.read_sql_query(sql_statement_table, conn)
+print(df)
