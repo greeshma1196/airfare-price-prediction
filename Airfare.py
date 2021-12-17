@@ -35,7 +35,7 @@ normalized_database_name = 'normalized_airfare_prediction.db'
 
 conn = creat_connection(normalized_database_name)
 
-#SQL statement for creating Year table
+#SQL statement for creating Years table
 sql_statement_year = """
 CREATE TABLE [Years](
     [ID] INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -44,7 +44,7 @@ CREATE TABLE [Years](
 """
 create_table(conn, sql_statement_year)
 
-#SQL statement for creating Quarter table
+#SQL statement for creating Quarters table
 sql_statement_quarter = """
 CREATE TABLE [Quarters](
     [ID] INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -53,7 +53,7 @@ CREATE TABLE [Quarters](
 """
 create_table(conn, sql_statement_quarter)
 
-#SQL statement for creating Carrier_LG table
+#SQL statement for creating Carriers table
 sql_statement_carrier = """
 CREATE TABLE [Carriers](
     [ID] INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -62,17 +62,17 @@ CREATE TABLE [Carriers](
 """
 create_table(conn, sql_statement_carrier)
 
-
-sql_statement_destinations = """
+#SQL statement for creating Airports table
+sql_statement_airport = """
 CREATE TABLE [Airports](
     [ID] INTEGER PRIMARY KEY AUTOINCREMENT,
     [Name] TEXT UNIQUE NOT NULL
 );
 """
-create_table(conn,sql_statement_destinations)
+create_table(conn,sql_statement_airport)
 
-#SQL statement for creating Destinations table
-sql_statement_destinations = """
+#SQL statement for creating Airfares table
+sql_statement_airfare = """
 CREATE TABLE [Airfares](
     [ID] INTEGER PRIMARY KEY AUTOINCREMENT,
     [Origin] INTEGER NOT NULL,
@@ -91,12 +91,15 @@ CREATE TABLE [Airfares](
     FOREIGN KEY(CLow_ID) REFERENCES Carriers(ID)
 );
 """
-create_table(conn, sql_statement_destinations)
+create_table(conn, sql_statement_airfare)
 
+#Initialize sets for Years, Quarters, Carriers, Airports respectively
 year_list = set()
 quarter_list = set()
 carrier_list = set()
 airport_list = set()
+
+#Read the file and extract values to store in the sets mentioned above
 with open('Airfare_Prediction.csv') as file:
     next(file)
     for i in reader(file):
@@ -112,7 +115,8 @@ with open('Airfare_Prediction.csv') as file:
             carrier_list.add(i[6])
         if(i[7] not in carrier_list):
             carrier_list.add(i[7])
-        
+
+#Iterate through each of the set and add to the tables   
 for i in year_list:
     sql_statement_insert_year = "INSERT INTO [Years] (Year) VALUES({})".format(i)
     execute_sql_statement(sql_statement_insert_year, conn)
@@ -149,6 +153,7 @@ with open('Airfare_Prediction.csv') as file:
         execute_sql_statement(sql_statement_insert_airfares, conn)
     conn.commit()
 
+#SQL statement to generate the entire table with normalized values
 sql_statement_table = """
     SELECT Years.Year,
         Quarters.Quarter,
