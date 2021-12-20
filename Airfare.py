@@ -4,6 +4,8 @@ import pandas as pd
 import sqlite3
 from sqlite3 import Error
 from csv import reader
+import matplotlib.pyplot as plt
+import numpy as np
 
 #Create connection function
 def creat_connection(db_file):
@@ -173,4 +175,106 @@ sql_statement_table = """
 """
 
 df = pd.read_sql_query(sql_statement_table, conn)
-print(df)
+
+# major_airlines=df.where(=='DL'or df['carrier_lg']=='AA'or df['carrier_lg']=='UA'or df['carrier_lg']=='WN']
+aa_average=df.where(df['Carrier_LG']=='AA').mean()['Average_Fare']
+ua_average=df.where(df['Carrier_LG']=='UA').mean()['Average_Fare']
+sw_average=df.where(df['Carrier_LG']=='WN').mean()['Average_Fare']
+dl_average=df.where(df['Carrier_LG']=='DL').mean()['Average_Fare']
+jb_average=df.where(df['Carrier_LG']=='B6').mean()['Average_Fare']
+
+Airlines =['American','United','South West','Delta',"Jet Blue"]
+pos = np.arange(len(Airlines))
+avg_fares = [aa_average,ua_average,sw_average,dl_average,jb_average]
+
+bars=plt.bar(pos, avg_fares, align='center')
+bars[0].set_color('darkred')
+bars[2].set_color('yellow')
+bars[3].set_color('red')
+bars[4].set_color('steelblue')
+plt.xticks(pos, Airlines)
+plt.xlabel('Airlines')
+plt.ylabel('Average Fares($)')
+plt.title('5 Major Carriers and their average fares')
+
+
+# plt.plot(df['Distance'],df['Average Fare'])
+
+df['Origin'].value_counts()[:10].sort_values(ascending=False)
+
+atl_average=df.where(df['Origin']=='Atlanta, GA (Metropolitan Area)').mean()['Average_Fare']
+ord_average=df.where(df['Origin']=='Chicago, IL' ).mean()['Average_Fare']
+dfw_average=df.where(df['Origin']=='Dallas/Fort Worth, TX').mean()['Average_Fare']
+bos_average=df.where(df['Origin']=='Boston, MA (Metropolitan Area)').mean()['Average_Fare']
+lax_average=df.where(df['Origin']=='Los Angeles, CA (Metropolitan Area)').mean()['Average_Fare']
+lax_average
+
+Origin =['Atlanta','Chicago ','Dallas','Boston']
+pos = np.arange(len(Origin))
+origin_fares = [atl_average,ord_average,dfw_average,bos_average]
+plt.scatter(Origin[0],origin_fares[0],color='red')
+plt.scatter(Origin[1],origin_fares[1],color='blue')
+plt.scatter(Origin[2],origin_fares[2],color='yellow')
+plt.scatter(Origin[3],origin_fares[3],color='purple')
+plt.scatter(Origin[4],origin_fares[4],color='brown')
+plt.xlabel('Origin Airports')
+plt.ylabel('Average Fares($)')
+plt.title('4 Major Airports and Their Average Fares')
+
+q1_average=df.where(df['Quarter']==1).mean()['Average_Fare']
+q2_average=df.where(df['Quarter']==2).mean()['Average_Fare']
+q3_average=df.where(df['Quarter']==3).mean()['Average_Fare']
+q4_average=df.where(df['Quarter']==4).mean()['Average_Fare']
+
+Quarters =['Quarter1','Quarter2','Quarter3','Quarter4']
+pos = np.arange(len(Quarters))
+quarter_fares = [q1_average,q2_average,q3_average,q4_average]
+plt.plot(Quarters,quarter_fares,'-o',color='red',linewidth=3)
+
+plt.xlabel('Quarters')
+plt.ylabel('Average Fares($)')
+plt.title('Average Fares in every Quarter')
+
+plt.figure()
+plt.hist2d(df['Distance'],df['Average_Fare'],bins=1000)
+plt.colorbar()
+plt.xlabel('Distance in miles')
+plt.ylabel('Average Fares($)')
+plt.title('Flying Distance vs Average Fares')
+
+# Flight fare prediction
+df.corr()
+
+# Encoding categorical values
+from sklearn import preprocessing
+le = preprocessing.LabelEncoder()
+
+# df=df.drop(['Average Fare'],axis=1)
+data_categorical=df.select_dtypes(exclude=["int64","float","int32"])
+data_numerical=df.select_dtypes(include=["int64","float","int32"])
+data_categorical=data_categorical[['Origin','Destination']]
+data_categorical=data_categorical.apply(le.fit_transform)
+
+data_categorical
+data_numerical=data_numerical[['Year','Quarter','Distance']]
+x=pd.concat([data_categorical,data_numerical],axis=1)
+y=df['Average_Fare']
+
+from sklearn.model_selection import train_test_split
+
+X_train,X_test,y_train,y_test=train_test_split(x,y,random_state=0)
+
+from sklearn.ensemble import RandomForestRegressor
+
+random_forest=RandomForestRegressor(n_estimators=100,max_depth=40).fit(X_train,y_train)
+print('Training accuracy score: {}'.format(random_forest.score(X_train,y_train)))
+print('Testing Accuracy score: {}'.format(random_forest.score(X_test,y_test)))
+
+feature_importance = random_forest.feature_importances_
+sorted_idx = np.argsort(feature_importance)
+pos = np.arange(sorted_idx.shape[0]) + .5
+print(pos)
+plt.figure()
+plt.barh(pos, feature_importance[sorted_idx], align='center')
+plt.yticks(pos, np.array(X_train.columns)[sorted_idx])
+plt.title('Feature Importance(Random Forest Regressor)')
