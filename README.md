@@ -1,11 +1,11 @@
 # airfare-price-prediction
 
-Introduction
+## Introduction
 
 The cost of a flight ticket depends numerous factors. Airline companies use sophisticated approaches such as “Revenue Management” or “Yield Management” to increase the cost of a ticket. Some of the factors that affect the price are time of purchase, traffic on the website, number of seats left in a particular flight, carriers, distance and time of the year. Our goal is to analyze the factors that significantly affect flight fares and subsequently develop a prediction model to predict the average fare for a particular route. This is carried out by examining historical data over a period of 20 years.
 
 
-Data Description
+## Data Description
 
 The dataset used for the analysis and prediction was extracted from U.S. Department of Transportation. The dataset has records of over 20 years and is categorized by 4 quadrants of the year. We have selected the relevant columns from the dataset for analyzing and predicting the average fare for a given route. The dataset has these following columns:
 
@@ -19,12 +19,17 @@ The dataset used for the analysis and prediction was extracted from U.S. Departm
 8.	carrier_low: Carrier with the lowest fare in that route
 
 
-Data Visualization & Prediction
+## Data Analysis & Visualization
 
-Contains initial exploratory analysis and data pre-processing.
+The first step is to carry out initial exploratory data analysis. We have also normalized the database in this process. Data pre-processing in our model involves the encoding of categorical features like Origin, Destination, Carrier_Lg etc into numeric values which is required for our regression task. Label Encoder of Scikit-learn library has been used here for this purpose.
 
 
-Conclusion
+## Prediction
+
+Our task of accurately predicting flight fares across the US can be categorized as a regression task. A Random Forest Regressor model has been employed to predict the airfare values.
+
+
+## Conclusion
 
 This model on Airfare Prediction will immensely help passengers in making the right decisions  in terms of air travel, especially in a world where we have so many choices.
 
